@@ -28,24 +28,24 @@ Instructions:
 Example:
   >> FileA Contents: (Limited to the first 6 Lines)
 
-        <answer instance="line-n.w8_059:8174:" senseid="phone"/>
-        <answer instance="line-n.w7_098:12684:" senseid="phone"/>
-        <answer instance="line-n.w8_106:13309:" senseid="phone"/>
-        <answer instance="line-n.w9_40:10187:" senseid="phone"/>
-        <answer instance="line-n.w9_16:217:" senseid="phone"/>
-        <answer instance="line-n.w8_119:16927:" senseid="product"/>
+        #<answer instance="620821002390339585">:" senseid="negative"/>
+        #<answer instance="621090050848198657">:" senseid="positive"/>
+        #<answer instance="621346870686826496">:" senseid="negative"/>
+        #<answer instance="621351900311478272">:" senseid="positive"/>
+        #<answer instance="621359167974961153">:" senseid="positive"/>
+        #<answer instance="621399334806884352">:" senseid="positive"/>
 
         ...continues on til end of data
 
 
    >> FileB Contents: (Limited to the first 6 Lines)
 
-        <answer instance="line-n.w8_059:8174:" senseid="phone"/>
-        <answer instance="line-n.w7_098:12684:" senseid="phone"/>
-        <answer instance="line-n.w8_106:13309:" senseid="phone"/>
-        <answer instance="line-n.w9_40:10187:" senseid="phone"/>
-        <answer instance="line-n.w9_16:217:" senseid="phone"/>
-        <answer instance="line-n.w8_119:16927:" senseid="product"/>
+        #<answer instance="620821002390339585">:" senseid="negative"/>
+        #<answer instance="621090050848198657">:" senseid="positive"/>
+        #<answer instance="621346870686826496">:" senseid="negative"/>
+        #<answer instance="621351900311478272">:" senseid="positive"/>
+        #<answer instance="621359167974961153">:" senseid="positive"/>
+        #<answer instance="621399334806884352">:" senseid="positive"/>
 
         ...continues on til end of data
 
@@ -79,15 +79,18 @@ def main():
     keyFile = str(sys.argv[2])
 
     global senseID_list
-    senseID_list = []
 
     test_data = ReadInFile(checkFile)
     BreakupFile(test_data)
-    testSenseID_list = senseID_list
+    testSenseID_list = senseID_list.copy()
+    senseID_list.clear()
 
     key_data = ReadInFile(keyFile)
     BreakupFile(key_data)
-    keySenseID_list = senseID_list
+    keySenseID_list = senseID_list.copy()
+    uniqueIDs = set(senseID_list)
+    uniqueIDs = list(uniqueIDs)
+    senseID_list.clear()
 
     totalCount = len(keySenseID_list)
     correct = 0
@@ -95,12 +98,12 @@ def main():
     for i in range(0, len(keySenseID_list)):
         if testSenseID_list[i] == keySenseID_list[i]:
             correct += 1
-            if 'phone' in testSenseID_list[i]:
+            if uniqueIDs[0] in testSenseID_list[i]:
                 matr[0][0] += 1
             else:
                 matr[1][1] += 1
         else:
-            if 'phone' in testSenseID_list[i]:
+            if uniqueIDs[0] in testSenseID_list[i]:
                 matr[0][1] += 1
             else:
                 matr[1][0] += 1
@@ -108,11 +111,9 @@ def main():
     result = correct / totalCount * 100
 
     print("Accuracy: " + str(result) + "%")
-    print("\t\tphone product")
-    print("phone\t" + str(matr[0][0]) + "\t\t" + str(matr[0][1]))
-    print("product\t " + str(matr[1][0]) + "\t\t" + str(matr[1][1]))
-
-
+    print("\t\t" + uniqueIDs[0] + " " + uniqueIDs[1])
+    print(uniqueIDs[0] + "\t" + str(matr[0][0]) + "\t\t" + str(matr[0][1]))
+    print(uniqueIDs[1] + "\t " + str(matr[1][0]) + "\t\t" + str(matr[1][1]))
     return;
 
 
@@ -128,19 +129,6 @@ def ReadInFile(fil):
     return fileData;
 
 
-# FUNCTION: RemoveUndesirables
-    # remove phrase boundaried and new lines
-def RemoveUndesirables(fileData):
-    fileData = fileData.lower()
-    fileData = ' '.join(fileData.split())
-    fileData = re.sub('<s>', '', fileData)
-    fileData = re.sub('<p>', '', fileData)
-    fileData = re.sub('<@>', '', fileData)
-    fileData = re.sub('</p>', '', fileData)
-    fileData = re.sub('</s>', '', fileData)
-    return fileData;
-
-k = 7
 
 def BreakupFile(fileData):
     fileData = fileData.split('\n')
@@ -150,7 +138,7 @@ def BreakupFile(fileData):
         if "<answer " in line:
             # find senseID
             senseID = line[ : -3: ]
-            senseID = senseID[senseID.index("senseid=") + 9 : : ]
+            senseID = senseID[senseID.index("sentiment=") + 11 : : ]
             senseID_list.append(senseID)
     return ;
 

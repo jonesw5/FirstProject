@@ -2,12 +2,12 @@
 Author: Wesley Jones
 Date: 3/31/2020
 Class: CMSC 416
-Assignment: 'WSD'  Program
+Assignment: 'Sentiment Analysis'  Program
 Description:
              METHOD USED: DECISION LIST
-             This program takes in pre-"word-sensed" data to train itself on "tagging" sentences  by it context and then
-             applies itself to another untagged data file. Outputting a copy of the second file with newly
-             associated context tags
+             This program takes in pre-"Sentiment Analysized" data to train itself on "tagging" sentences
+             by it context and then applies itself to another untagged data file. Outputting a copy of the
+             second file with newly associated context tags
 
 What's required:
              FileA - this will be your training data. The words and punctuation found within this file
@@ -32,15 +32,18 @@ Example:
   >> FileA Contents: (Limited to the first 2 Linestags)
 
         <corpus lang="en">
-        <lexelt item="line-n">
-        <instance id="line-n.w9_10:6830:">
-        <answer instance="line-n.w9_10:6830:" senseid="phone"/>
+        <lexelt item="sentiment">
+        <instance id="620821002390339585">
+        <answer instance="620821002390339585" sentiment="negative"/>
         <context>
-         <s> The New York plan froze basic rates, offered no protection to Nynex against an economic downturn that sharply cut demand and didn't offer flexible pricing. </s> <@> <s> In contrast, the California economy is booming, with 4.5% access <head>line</head> growth in the past year. </s>
+        Does @macleansmag still believe that Ms. Angela Merkel is the "real leader of the free world"?  http://t.co/isQfoIcod0 (Greeks may disagree
         </context>
         </instance>
-        <instance id="line-n.w8_057:16550:">
-        <answer instance="line-n.w8_057:16550:" senseid="product"/>
+        <instance id="621090050848198657">
+        <answer instance="621090050848198657" sentiment="negative"/>
+        <context>
+        By Michael Nienaber BERLIN, July 10 (Reuters) - The parties in Angela Merkel's coalition government sent conflicting signals on the latest
+        </context>
 
         (...continues on til end of data ending with)
         </lexelt>
@@ -50,31 +53,29 @@ Example:
    >> FileB Contents: (Limited to the first 14 Lines)
 
         <corpus lang="en">
-        <lexelt item="line-n">
-        <instance id="line-n.w8_059:8174:">
+        <lexelt item="sentiment">
+        <instance id="620979391984566272">
         <context>
-         <s> Advanced Micro Devices Inc., Sunnyvale, Calif., and Siemens AG of West Germany said they agreed to jointly develop, manufacture and market microchips for data communications and telecommunications with an emphasis on the integrated services digital network. </s> <@> </p> <@> <p> <@> <s> The integrated services digital network, or ISDN, is an international standard used to transmit voice, data, graphics and video images over telephone <head>lines</head> . </s>
+        On another note, it seems Greek PM Tsipras married Angela Merkel to Francois Hollande on Sunday #happilyeverafter http://t.co/gTKDxivf79
         </context>
         </instance>
-        <instance id="line-n.w7_098:12684:">
+        <instance id="621340584804888578">
         <context>
-         <s> In your May 21 story about the phone industry billing customers for unconnected calls, I was surprised that you did not discuss whether such billing is appropriate. </s> <@> <s> A caller who keeps a <head>line</head> open waiting for a connection uses communications switching and transmission equipment just as if a conversation were taking place. </s>
+        Amazon Prime Day is just like Black Friday if you only buy bulk protein powder and will-making software on Black Friday.
         </context>
-        </instance>
-        <instance id="line-n.w8_106:13309:">
 
         (...continues on til end of data ending with)
         </lexelt>
         </corpus>
 
    >COMMAND PROMPT>
-   >> python wsd.py line-train.txt line-test.txt my-model.txt > my-line-answers.txt
+   >> python sentiment.py sentiment-train.txt sentiment-test.txt my-model.txt > my-line-answers.txt
 
 
    >> OUTPUT TO FileC ( pos-test-with-tags.txt )
 
-        <answer instance="line-n.w8_059:8174:" senseid="phone"/>
-        <answer instance="line-n.w7_098:12684:" senseid="phone"/>
+        #<answer instance="620821002390339585">:" senseid="negative"/>
+        #<answer instance="621090050848198657">:" senseid="positive"/>
 
         ...continues on til end of data
 
@@ -105,42 +106,31 @@ def main():
 
     # DataStructures
     global FT_F_Sense
+    global senseID_list
+    global context_list
     FT_F_Sense = {0 :{}}  # [Type] _ [Feature] _ [Sense] _ count
     # == MAP<> Key-> 'word' | Value -> (MAP<> Key-> 'tag' | value -> count)
     # global Sense2Word
     # Tag2TagMap = {"" :{}} # == MAP<> Key-> 'tag(i-1)' | Value - (MAP<> Key-> 'tag(i)' | value -> count)
     # global Tag2WordMap
 
-    #GrabCommandLineInput()
-    HardCodeFileNames()
+    GrabCommandLineInput()
+    # HardCodeFileNames()
 
     trainingData = ReadInFile(trainFile)
     BreakupFile(trainingData)
     buildDictionary()
     # rankThem()
     # apply to test
+    senseID_list.clear()
+    context_list.clear()
     testingData = ReadInFile(testFile)
     BreakupFile(testingData)
     makeSense()
-    scorer()
+    # scorer()
 
 
 
-
-    # take in test file
-        # file to string
-        # remove unwanted chars
-        # separate parts of sentence
-            # Sentence
-            # Feature Word
-            # SenseID
-            # word+1
-            # word-1
-            # word+...k
-            # word-...k
-
-    # take in test file
-    # output file
 
 
 # FUNCTION: GrabCommandLineInput
@@ -237,6 +227,7 @@ def buildDictionary():
 
 def makeSense():
     global FT_F_Sense
+    global senseID_list
     # loop thru context list and grab features
     # find feature word
     indexC = 0
@@ -268,9 +259,10 @@ def makeSense():
 
         # print(sense)
         #<answer instance="line-n.w8_008:13756:" senseid="phone"/>
-        stringOut = "#<answer instance=\"" + lineID_list[indexC] + ":\" senseid=\"" + sense + "\"/>"
+        stringOut = "#<answer instance=\"" + lineID_list[indexC] + ":\" sentiment=\"" + sense + "\"/>"
         # outputFile += stringOut + "\n"
-        # print(stringOut)
+        print(stringOut)
+        senseID_list.append(sense)
         indexC += 1
 
     # print(runningCount)
@@ -324,37 +316,17 @@ def addToList(firstKey, secondKey, thirdKey):
 
     return True;
 
-rankedFeatures = []
-rankedDict = {}
-def rankThem():
-    global FT_F_Sense
-    global rankedDict
-    global rankedFeatures
-    rankedFeatures = []
-    for i in FT_F_Sense: # Feature Type
-        for j in FT_F_Sense[i]:
-            s = uniqueIDs[0]
-            if FT_F_Sense[i][j].get(uniqueIDs[0]) < FT_F_Sense[i][j].get(uniqueIDs[1]):
-                s = uniqueIDs[1]
-            p = FT_F_Sense[i][j].get("log")
-            if "<s>" not in j and p <= 1:
-                rankedFeatures.append((p, j, i, s))
-
-    rankedFeatures = sorted(rankedFeatures, key=lambda x: x[0])
-    rankedFeatures.reverse()
-
-    return ;
 
 
 
 
 def scorer():
     global  senseID_list
-    senseID_list = []
+    # senseID_list = []
     BreakupFile(outputFile)
     testSenseID_list = senseID_list
 
-
+    senseID_list.clear()
     keyfile = "sentiment-test-key.txt"
     key_data = ReadInFile(keyfile)
     BreakupFile(key_data)
